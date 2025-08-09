@@ -56,7 +56,7 @@ Assurez-vous d'avoir les outils suivants installés :
 
 1.  **Cloner le dépôt :**
     ```sh
-    git clone https://votre-depot/bibliotheque.git
+    git clone https://adamfutur/bibliotheque.git
     cd bibliotheque
     ```
 
