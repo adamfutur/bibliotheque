@@ -2,7 +2,7 @@
 
 Ce dépôt contient une application web complète pour la gestion d'une bibliothèque, développée avec le framework Python Django. Elle permet de gérer les livres, les auteurs, les catégories et les emprunts de manière simple et efficace.
 
-![Placeholder](https://via.placeholder.com/800x400.png?text=Capture+d'écran+de+votre+application)
+![Placeholder](login.png)
 *(Remplacez cette image par une vraie capture d'écran de votre application)*
 
 ## Table des matières
@@ -28,9 +28,9 @@ Ce dépôt contient une application web complète pour la gestion d'une biblioth
 
 ## 📸 Captures d'écran
 
-| Page d'accueil | Liste des livres | Détail d'un livre |
+| Liste des ouvrages | ajouter ouvrage| Détail d'un livre |
 | :---: | :---: | :---: |
-| ![Placeholder](https://via.placeholder.com/300x200.png?text=Page+d'accueil) | ![Placeholder](https://via.placeholder.com/300x200.png?text=Liste+des+livres) | ![Placeholder](https://via.placeholder.com/300x200.png?text=Détail+d'un+livre) |
+| ![Placeholder](liste.png) | ![Placeholder](addouvrage.png) | ![Placeholder](ouvrageinfos.png) |
 
 *(Remplacez ces liens par de vraies captures d'écran de votre projet)*
 
