@@ -1,0 +1,59 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/alert.css' %}">
+{% for message in messages %}
+    {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+        <div class="alert alert-error" id="alert">
+            <div class="icon__wrapper">
+                <i class="bi bi-ban-fill"></i>
+            </div>
+            <p>
+              Erreur <br>
+              {{ message }}</p>
+            <span class="mdi mdi-open-in-new open"></span>
+            <span class="mdi mdi-close close"></span>
+        </div>
+    {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+        <div class="alert alert-warning" id="alert">
+            <div class="icon__wrapper">
+                <span class="mdi mdi-alert-outline"></span>
+            </div>
+            <p>
+              Attention <br>
+              {{ message }}</p>
+            <span class="mdi mdi-open-in-new open"></span>
+            <span class="mdi mdi-close close"></span>
+        </div>
+    {% elif message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+        <div class="alert alert-info" id="alert">
+            <div class="icon__wrapper">
+                <span class="mdi mdi-alert-outline"></span>
+            </div>
+            <p>
+              Informations <br>
+              {{ message }}</p>
+            <span class="mdi mdi-open-in-new open"></span>
+            <span class="mdi mdi-close close"></span>
+        </div>
+    {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+        <div class="alert alert-success" id="alert">
+            <div class="icon__wrapper">
+              <i class="bi bi-check-circle-fill"></i>
+            </div>
+            
+            <p>Succès <br>
+              {{ message }}</p>
+            <span class="mdi mdi-open-in-new open"></span>
+            <span class="mdi mdi-close close"></span>
+        </div>
+    {% endif %}
+{% endfor %}
+
+<script>
+    // Function to hide the alert after 5 seconds
+    setTimeout(function() {
+        var alert = document.getElementById("alert");
+        if (alert) {
+            alert.style.display = "none";
+        }
+    }, 3000); // 5000 milliseconds = 5 seconds
+</script>

@@ -1,0 +1,410 @@
+{% extends 'admin_nav.html' %}{% block content %}
+  <!-- Include Bootstrap CSS -->
+  
+<style>
+  button{
+    margin: 4px;
+  }
+</style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        const csrfToken = '{{ csrf_token }}';
+       document.addEventListener('DOMContentLoaded', function () {
+        const deleteButtons = document.querySelectorAll('#deleteButton');
+        const returnButton = document.querySelectorAll('#returnButton');
+
+        $('.modify-btn').click(function() {
+            var id_emp = $(this).data('emprunt-id');
+            $('#id_emprunt').val(id_emp);
+          });
+    
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const id_emprunt = this.getAttribute('data-id_emprunt');
+                const confirmation = confirm("Êtes-vous sûr de vouloir supprimer cette emprunt ?");
+    
+                if (confirmation) {
+                    fetch(`/supprimer_emprunt/${id_emprunt}/`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}' 
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('La réponse du réseau n\'était pas correcte');
+                            }
+                            return response.json();
+                            location.reload();
+                        })
+                        .then(data => {
+                        // Traitement de la réponse en cas de succès
+                        console.log(data);
+                        location.reload();
+                        
+                    })
+                        .catch(error => {
+                            // Gestion des erreurs
+                            console.error('Erreur :', error);
+                            location.reload();
+                        });
+                }
+            });
+        });
+
+
+        returnButton.forEach(button => {
+            button.addEventListener('click', function () {
+                const id_emprunt = this.getAttribute('data-id_emprunt');
+                const confirmation = confirm("Confirmez-vous le retour de l'exemplaire ?");
+    
+                if (confirmation) {
+                    fetch(`/rendre_emprunt/${id_emprunt}/`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}' 
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('La réponse du réseau n\'était pas correcte');
+                            }
+                            return response.json();
+                            location.reload();
+                        })
+                        .then(data => {
+                        // Traitement de la réponse en cas de succès
+                        console.log(data);
+                        location.reload();
+                        
+                    })
+                        .catch(error => {
+                            // Gestion des erreurs
+                            console.error('Erreur :', error);
+                            location.reload();
+                        });
+                }
+            });
+        });
+    });
+
+
+    
+    
+      </script>
+
+<!-- Bootstrap Modal for modification -->
+<div class="modal fade" id="modifyModal" tabindex="-1" role="dialog" aria-labelledby="modifyModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modifyModalLabel">Modifier une catégorie</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="modifyEmpruntForm" method="post" action="{% url 'modifier_emprunt' %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="modifiedEmpruntId">ID :</label>
+            <input type="text" class="form-control" id="id_emprunt" name="id_emprunt" readonly>
+            <label for="modifiedEmpruntOuvrage">Ouvrage :</label>
+            <select class="form-control selectpicker" data-live-search="true" id="id_o" name="id_o" required>
+              {% for ouvrage in ouvrages %}
+                <option value="{{ ouvrage.ISBN }}">{{ ouvrage.titre }}</option>
+              {% endfor %}
+            </select>
+            <label for="modifiedEmpruntExemplaire">Exemplaire :</label>
+            <select class="form-control selectpicker" data-live-search="true" id="id_exp" name="id_exp" required>
+              {% for exemplaire in exemplaires %}
+                <option value="{{ exemplaire.id_exemplaire }}">{{ exemplaire.id_exemplaire }}</option>
+              {% endfor %}
+            </select>
+            <label for="modifiedEmpruntDateSortie">Date de sortie :</label>
+            <input type="date" class="form-control" id="date_s" name="date_s" required>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <button type="submit" class="btn btn-primary" id="modifySubmit">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container mt-5">
+
+  <h2>Liste des Emprunts</h2>
+
+  <!-- Search input for Ouvrage -->
+<div class="container mt-3">
+  <input type="text" id="searchOuvrage" class="form-control" placeholder="Recherche par Ouvrage ou par Exemplaire">
+</div>
+
+<!-- Search input for Adhérent -->
+<div class="container mt-3">
+  <input type="text" id="searchBibliothecaire" class="form-control" placeholder="Recherche par Adhérent ou par Utilisateur">
+</div>
+  <!-- Date filters -->
+  <div class="container mt-3">
+    <button class="btn btn-primary" onclick="sortTable(6)">Trier par Date de Sortie</button>
+    <button class="btn btn-primary" onclick="sortTable(7)">Trier par Date de Retour</button><br><br>
+    {% if emprunts.has_previous %}
+    <button type="button" class="btn btn-danger mb-3" onclick="filterDeadlineSurpassed()">Délais dépassé</button>
+    {% endif %}
+  </div>
+
+  <!-- Table -->
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Ouvrage</th>
+        <th>Image</th>
+        <th>ID Exemplaire</th>
+        <th>ID Adhérent</th>
+        <th>ID Utilisateur</th>
+        <th>Date de Sortie</th>
+        <th>Date de Retour</th>
+        <th>Rendu le</th>
+        <th>Rendu</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for emprunt in emprunts %}
+        <tr>
+          <td>{{ emprunt.id_emprunt }}</td>
+          <td>{{ emprunt.ouvrage.titre }}</td>
+          <td><img src="{{ emprunt.ouvrage.image.url }}" style="max-width: 50%; height: auto;"></td>
+          <td>{{ emprunt.exemplaire.id_exemplaire }}</td>
+          <td>{{ emprunt.bibliothecaire_id }}</td>
+          <td>{{ emprunt.utilisateur.email }}</td>
+          <td>{{ emprunt.date_sortie }}</td>
+          <td>{{ emprunt.date_retour }}</td>
+          <td>{% if emprunt.rendu %}{{ emprunt.date_rendu }}{% endif %}</td>
+          <td>{{ emprunt.rendu }}</td>
+          <td>
+            {% if request.user.role == 'BIBLIOTHECAIRE' %}
+            <button class="btn btn-primary modify-btn" data-toggle="modal" data-target="#modifyModal" data-emprunt-id="{{ emprunt.id_emprunt }}">Modifier</button>
+            {% endif %}
+            <button class="btn btn-warning" data-id_emprunt="{{ emprunt.id_emprunt }}" id="returnButton">Retourner</button>
+            <button class="btn btn-danger delete-btn" data-id_emprunt="{{ emprunt.id_emprunt }}" id="deleteButton">Supprimer</button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <div class="pagination">
+
+    <nav aria-label="Page navigation">
+      <ul class="pagination">
+          {% if emprunts.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+          {% endif %}
+          {% for num in emprunts.paginator.page_range %}
+          <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+          {% endfor %}
+          {% if emprunts.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+          {% endif %}
+      </ul>
+  </nav>
+  </div>
+
+</div>
+
+<!-- Include jQuery and Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<style>
+  /* Add custom CSS styles for table */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th, td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+  }
+
+  th {
+    background-color: #f2f2f2;
+  }
+
+  /* Add margin to pagination */
+  .pagination {
+    margin-top: 20px;
+  }
+  .deadline-surpassed {
+    background-color: #f67a7a;
+  }
+</style>
+<script>
+  const today_date = new Date().toISOString().slice(0, 10);
+    
+    // Loop through each table row
+    $('tbody tr').each(function() {
+        // Get the text content of the date cell
+        const dateText = $(this).find('td:nth-child(8)').text().trim();
+        const renduText = $(this).find('td:nth-child(10)').text().trim();
+        const rendu = (renduText.toLowerCase() === 'true');
+
+        // Preprocess the date string
+        const processedDateText = dateText.replace(',', '').replace('a.m.', 'AM').replace('p.m.', 'PM');
+        
+        // Attempt to parse the date string using the Date constructor
+        const deadlineDate = new Date(processedDateText);
+
+        // Check if the parsed date is valid
+        if (!isNaN(deadlineDate.getTime())) { // Check if deadlineDate is a valid Date object
+            const deadlineISO = deadlineDate.toISOString().slice(0, 10);
+
+            // Compare the deadline date with today's date
+            if (deadlineISO < today_date && !rendu) {
+                // If the deadline date is in the past, add the 'deadline-surpassed' class and show the row
+                $(this).addClass('deadline-surpassed');
+            } else {
+                // If the deadline date is in the future, remove the 'deadline-surpassed' class and hide the row
+                $(this).removeClass('deadline-surpassed');
+            }
+        } else {
+            console.error('Invalid date format:', dateText);
+        }
+    });
+
+
+  // Function to filter table rows based on user input for Ouvrage
+$(document).ready(function(){
+  $('#searchOuvrage').on('keyup', function(){
+    var searchText = $(this).val().toLowerCase();
+    $('tbody tr').each(function(){
+      var ouvrageText = $(this).find('td:nth-child(2)').text().toLowerCase();
+      var expText = $(this).find('td:nth-child(4)').text().toLowerCase();
+      if (ouvrageText.indexOf(searchText) > -1 || expText.indexOf(searchText) > -1) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+  });
+});
+
+  // Function to filter table rows based on user input for Adhérent
+$(document).ready(function(){
+  $('#searchBibliothecaire').on('keyup', function(){
+    var searchText = $(this).val().toLowerCase();
+    $('tbody tr').each(function(){
+      var bibliothecaireText = $(this).find('td:nth-child(5)').text().toLowerCase();
+      var utilisateurText = $(this).find('td:nth-child(6)').text().toLowerCase();
+      if (bibliothecaireText.indexOf(searchText) > -1 || utilisateurText.indexOf(searchText) > -1) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+  });
+});
+
+  // Function to sort the table rows based on a specific column index
+  function sortTable(columnIndex) {
+    var table, rows, switching, i, x, y, shouldSwitch;
+    table = document.querySelector('.table');
+    switching = true;
+    while (switching) {
+      switching = false;
+      rows = table.rows;
+      for (i = 1; i < (rows.length - 1); i++) {
+        shouldSwitch = false;
+        x = rows[i].getElementsByTagName("TD")[columnIndex];
+        y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
+        if (x.innerHTML > y.innerHTML) {
+          shouldSwitch = true;
+          break;
+        }
+      }
+      if (shouldSwitch) {
+        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+        switching = true;
+      }
+    }
+  }
+
+   // Function to filter the table and show only the rows where the deadline has been surpassed
+   function filterDeadlineSurpassed() {
+    // Define today's date outside the loop
+    const today_date = new Date().toISOString().slice(0, 10);
+    
+    // Loop through each table row
+    $('tbody tr').each(function() {
+        // Get the text content of the date cell
+        const dateText = $(this).find('td:nth-child(8)').text().trim();
+
+        // Preprocess the date string
+        const processedDateText = dateText.replace(',', '').replace('a.m.', 'AM').replace('p.m.', 'PM');
+        
+        // Attempt to parse the date string using the Date constructor
+        const deadlineDate = new Date(processedDateText);
+
+        // Check if the parsed date is valid
+        if (!isNaN(deadlineDate.getTime())) { // Check if deadlineDate is a valid Date object
+            const deadlineISO = deadlineDate.toISOString().slice(0, 10);
+
+            // Compare the deadline date with today's date
+            if (deadlineISO < today_date) {
+                // If the deadline date is in the past, show the row
+                $(this).show();
+            } else {
+                // If the deadline date is in the future, hide the row
+                $(this).hide();
+            }
+        } else {
+            console.error('Invalid date format:', dateText);
+        }
+    });
+}
+
+
+//modify emprunt
+document.addEventListener('submit', function(event) {
+    if (event.target && event.target.id === 'modifyEmpruntForm') {
+        event.preventDefault();
+        
+        // Send AJAX request
+        var formData = new FormData(event.target);
+        fetch(event.target.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'  // Replace with your CSRF token
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Handle JSON response
+            console.log(data);
+            // Reload the page only if needed
+            if (data.message) {
+                location.reload();
+            }
+            else {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            location.reload();
+        });
+    }
+});
+</script>
+{% endblock content %}
